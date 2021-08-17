@@ -28,7 +28,7 @@ class KBlePeripheralPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         when (call.method) {
             "startAdvertising" -> {
-                Log.d("KBlePeripheralPlugin", "startAdvertising,${peripheralBle}")
+                Log.d("KBlePeripheralPlugin", "startAdvertising")
                 val kAdvertiseSetting = KAdvertiseSetting()
                 call.argument<Map<String, Any>>("AdvertiseSetting")?.let {
                     kAdvertiseSetting.setByMap(it)
@@ -41,8 +41,12 @@ class KBlePeripheralPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 call.argument<Map<String, Any>>("ScanResponseData")?.let {
                     scanResponseData.setByMap(it)
                 }
-                peripheralBle.startAdvertising(kAdvertiseSetting, kAdvertiseData, scanResponseData)
-                result.success("Android ${android.os.Build.VERSION.RELEASE}")
+                peripheralBle.startAdvertising(kAdvertiseSetting, kAdvertiseData, scanResponseData, result)
+            }
+            "stopAdvertising" -> {
+                Log.d("KBlePeripheralPlugin", "stopAdvertising")
+                val id = call.argument<String>("id")
+                peripheralBle.stopAdvertising(id!!, result)
             }
             else -> {
                 result.notImplemented()

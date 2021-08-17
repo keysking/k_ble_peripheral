@@ -12,16 +12,18 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final ble = KBlePeripheral();
+  var advertiseIds = <String>[];
 
   @override
   void initState() {
     super.initState();
     ble.advertiseSetting.connectable = true;
-    ble.advertiseSetting.name = "k";
+    ble.advertiseSetting.name = "kkk111";
     ble.advertiseSetting.advertiseMode =
         KAdvertiseSetting.ADVERTISE_MODE_BALANCED;
     ble.advertiseData.addManufacturer(0x0A8F, [0x31, 0x32]);
-    ble.advertiseData.addServiceData("0000ffff-0000-1000-8000-00805f9b34fb", [0x34, 0x35]);
+    ble.advertiseData
+        .addServiceData("0000ffff-0000-1000-8000-00805f9b34fb", [0x34, 0x35]);
   }
 
   @override
@@ -34,11 +36,28 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(
             children: [
+              TextField(
+                decoration: InputDecoration(labelText: 'Advertisement name:'),
+              ),
               ElevatedButton(
-                onPressed: () {
-                  ble.startAdvertising();
+                onPressed: () async {
+                  final id = await ble.startAdvertising();
+                  setState(() {
+                    advertiseIds.add(id);
+                  });
                 },
                 child: Text("start"),
+              ),
+              ...advertiseIds.map(
+                (id) => ElevatedButton(
+                  onPressed: () async {
+                    await ble.stopAdvertising(id);
+                    setState(() {
+                      advertiseIds.remove(id);
+                    });
+                  },
+                  child: Text("stop advertising($id)"),
+                ),
               ),
             ],
           ),

@@ -24,11 +24,18 @@ class KBlePeripheral {
   KAdvertiseData advertiseData = KAdvertiseData();
   KAdvertiseData scanResponseData = KAdvertiseData();
 
-  startAdvertising() async {
-    await method.invokeMethod("startAdvertising", <String, dynamic>{
+   Future<String> startAdvertising() async {
+    final id = await method.invokeMethod<String>("startAdvertising", <String, dynamic>{
       "AdvertiseSetting": advertiseSetting.toMap(),
       "AdvertiseData": advertiseData.toMap(),
       "ScanResponseData": scanResponseData.toMap(),
     });
+    print("开启成功");
+    return id!;
+  }
+
+  stopAdvertising(String id) async {
+    await method.invokeMethod("stopAdvertising", <String, dynamic>{"id": id});
+    print("关闭成功");
   }
 }

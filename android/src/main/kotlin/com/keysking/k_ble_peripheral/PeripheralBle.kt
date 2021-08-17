@@ -7,8 +7,12 @@ import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.util.Log
+import android.view.KeyCharacterMap
 import com.keysking.k_ble_peripheral.model.KAdvertiseData
 import com.keysking.k_ble_peripheral.model.KAdvertiseSetting
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.MethodChannel.Result
+import java.util.*
 
 class PeripheralBle(private val context: Context) {
     private val manager: BluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -28,23 +32,22 @@ class PeripheralBle(private val context: Context) {
     /**
      * 广播启动回调函数
      */
-    private val advertisingCallback = object : AdvertiseCallback() {
+    private class KAdvertiseCallback(val result: Result, val uuid: UUID) : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
             // TODO 启动成功后放置Services
             super.onStartSuccess(settingsInEffect)
+            result.success(uuid.toString())
         }
 
         override fun onStartFailure(errorCode: Int) {
             // TODO 启动失败报错
             super.onStartFailure(errorCode)
+            result.error(errorCode.toString(), "", null)
         }
     }
 
-    //    fun start() {
-//        Log.e("KBlePeripheralPlugin", "start: ${context.packageName}")
-//    }
-    fun startAdvertising(advertiseSettings: KAdvertiseSetting, advertiseData: KAdvertiseData, scanResponseData: KAdvertiseData) {
-        Log.e("KBlePeripheralPlugin", "start: ${context.packageName}~~~")
+    private val advertiseCallbackMap = mutableMapOf<String, KAdvertiseCallback>()
+    fun startAdvertising(advertiseSettings: KAdvertiseSetting, advertiseData: KAdvertiseData, scanResponseData: KAdvertiseData, result: Result) {
         // TODO auto open bluetooth when it closed
 
         // 广播设置
@@ -58,6 +61,20 @@ class PeripheralBle(private val context: Context) {
 
         adapter.name = advertiseSettings.name
 
-        advertiser.startAdvertising(settings, data, scanResponse, advertisingCallback)
+        val uuid = UUID.randomUUID()
+        val callback = KAdvertiseCallback(result, uuid)
+        advertiseCallbackMap[uuid.toString()] = callback
+        advertiser.startAdvertising(settings, data, scanResponse, callback)
+    }
+
+    fun stopAdvertising(uuid: String, result: Result) {
+        val callback = advertiseCallbackMap[uuid]
+        if (callback == null) {
+            result.error("1", "id错误或对应广播已关闭", null)
+        } else {
+            advertiser.stopAdvertising(callback)
+            advertiseCallbackMap.remove(uuid)
+            result.success(null)
+        }
     }
 }
