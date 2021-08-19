@@ -5,7 +5,11 @@ import android.bluetooth.le.AdvertiseSettings
 /**
  * 广播设置
  */
-class KAdvertiseSetting {
+class KAdvertiseSetting() {
+    constructor(settingMap: Map<String, Any>) : this() {
+        setByMap(settingMap)
+    }
+
     // 广播名称
     var name: String? = null
 
@@ -21,11 +25,11 @@ class KAdvertiseSetting {
     var txPowerLevel = AdvertiseSettings.ADVERTISE_TX_POWER_HIGH
 
     fun toAdvertiseSetting(): AdvertiseSettings = AdvertiseSettings.Builder()
-            .setConnectable(connectable)
-            .setTimeout(timeout)
-            .setAdvertiseMode(advertiseMode)
-            .setTxPowerLevel(txPowerLevel)
-            .build()
+        .setConnectable(connectable)
+        .setTimeout(timeout)
+        .setAdvertiseMode(advertiseMode)
+        .setTxPowerLevel(txPowerLevel)
+        .build()
 
     fun setByMap(settingMap: Map<String, Any>) {
         name = settingMap["name"] as String?

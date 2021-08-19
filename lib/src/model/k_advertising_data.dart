@@ -1,10 +1,15 @@
 import 'dart:typed_data';
 
-class KAdvertiseData {
+class KAdvertisingData {
   final Map<String, List<int>?> serviceData = Map();
   final Map<int, List<int>> manufacturerData = Map();
   bool includeDeviceName = true;
   bool includeTxPowerLevel = true;
+
+  KAdvertisingData({
+    this.includeDeviceName = true,
+    this.includeTxPowerLevel = true,
+  });
 
   addServiceData(String uuid, List<int>? data) {
     serviceData[uuid] = data;

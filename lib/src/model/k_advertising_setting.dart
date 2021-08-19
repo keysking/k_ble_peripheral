@@ -1,4 +1,4 @@
-class KAdvertiseSetting {
+class KAdvertisingSetting {
   static const int ADVERTISE_MODE_LOW_POWER = 0;
   static const int ADVERTISE_MODE_BALANCED = 1;
   static const int ADVERTISE_MODE_LOW_LATENCY = 2;
@@ -9,14 +9,20 @@ class KAdvertiseSetting {
   static const int ADVERTISE_TX_POWER_HIGH = 3;
 
   String? name;
-  bool connectable = false;
+  bool connectable = true;
   int timeout = 0;
   int advertiseMode = ADVERTISE_MODE_BALANCED;
   int txPowerLevel = ADVERTISE_TX_POWER_MEDIUM;
 
-  KAdvertiseSetting();
+  KAdvertisingSetting({
+    this.name,
+    this.connectable = true,
+    this.timeout = 0,
+    this.advertiseMode = ADVERTISE_MODE_BALANCED,
+    this.txPowerLevel = ADVERTISE_TX_POWER_MEDIUM,
+  });
 
-  KAdvertiseSetting.fromJson(Map<String, dynamic> json) {
+  KAdvertisingSetting.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     connectable = json['connectable'];
     timeout = json['timeout'];

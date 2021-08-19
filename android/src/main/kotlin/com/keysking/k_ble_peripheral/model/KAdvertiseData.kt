@@ -4,11 +4,15 @@ import android.bluetooth.le.AdvertiseData
 import android.os.ParcelUuid
 import android.util.Log
 
-class KAdvertiseData {
+class KAdvertiseData() {
     private val serviceData: MutableMap<ParcelUuid, ByteArray?> = mutableMapOf()
     private val manufacturerData: MutableMap<Int, ByteArray> = mutableMapOf()
     private var includeDeviceName = true
     private var includeTxPowerLevel = true
+
+    constructor(settingMap: Map<String, Any>) : this() {
+        setByMap(settingMap)
+    }
 
     fun toAdvertiseData(): AdvertiseData {
         val builder = AdvertiseData.Builder()
