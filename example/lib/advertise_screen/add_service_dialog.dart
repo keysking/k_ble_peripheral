@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AddServiceDialog extends StatefulWidget {
-  final void Function(String uuid, List<int> data) onAdd;
+  final void Function(String uuid, List<int>? data) onAdd;
   const AddServiceDialog({Key? key, required this.onAdd}) : super(key: key);
 
   @override
@@ -14,7 +14,7 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
 
   final uuidTextController = TextEditingController();
   final dataTextController = TextEditingController();
-
+  var noData = false;
   @override
   void initState() {
     uuidTextController.text = "0000ffff-0000-1000-8000-00805f9b34fb";
@@ -31,8 +31,18 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
 
   String? validateData(String? data) {
     if (data == null) return 'Incorrect Data';
-    RegExp exp = RegExp(r'^[0-9a-f]*$');
+    RegExp exp = RegExp(r'^([0-9a-f]{2})*$');
     return exp.hasMatch(data) ? null : 'Incorrect Data';
+  }
+
+  List<int> dataToList(String data) {
+    final list = <int>[];
+    for (int i = 0; i <= data.length - 2; i += 2) {
+      final hex = data.substring(i, i + 2);
+      final number = int.parse(hex, radix: 16);
+      list.add(number);
+    }
+    return list;
   }
 
   @override
@@ -58,16 +68,31 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
                 ),
               ),
               SizedBox(height: 10),
-              TextFormField(
-                controller: dataTextController,
-                validator: validateData,
-                onChanged: (value) {
-                  setState(() {});
-                },
-                decoration: InputDecoration(
-                    labelText: 'Data:',
-                    prefixText: '0x',
-                    border: OutlineInputBorder()),
+              if (!noData)
+                TextFormField(
+                  controller: dataTextController,
+                  validator: validateData,
+                  onChanged: (value) {
+                    setState(() {});
+                  },
+                  decoration: InputDecoration(
+                      labelText: 'Data:',
+                      prefixText: '0x',
+                      border: OutlineInputBorder()),
+                ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text("No Data:"),
+                  Checkbox(
+                      value: noData,
+                      onChanged: (value) {
+                        setState(() {
+                          noData = value ?? false;
+                        });
+                      }),
+                ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -83,6 +108,11 @@ class _AddServiceDialogState extends State<AddServiceDialog> {
                   ElevatedButton(
                     onPressed: (_formKey.currentState?.validate() ?? true)
                         ? () async {
+                            widget.onAdd(
+                                uuidTextController.text,
+                                noData
+                                    ? null
+                                    : dataToList(dataTextController.text));
                             Navigator.pop(context);
                           }
                         : null,

@@ -70,7 +70,7 @@ class _NewAdvertiseDialogState extends State<NewAdvertiseDialog> {
                   builder: (context) => Dialog(
                     child: AddServiceDialog(
                       onAdd: (uuid, data) {
-                        // TODO 添加service
+                        services[uuid] = data;
                       },
                     ),
                   ),
@@ -91,23 +91,27 @@ class _NewAdvertiseDialogState extends State<NewAdvertiseDialog> {
                       backgroundColor: MaterialStateProperty.all(Colors.red)),
                 ),
                 ElevatedButton(
-                    onPressed: () async {
-                      final advertisingSetting = KAdvertisingSetting(
-                        name: nameTextFieldController.text,
-                        connectable: connentable,
-                        timeout: timeoutTextFieldController.text.isEmpty
-                            ? 0
-                            : int.parse(timeoutTextFieldController.text),
-                      );
-                      final advertisingData = KAdvertisingData();
-                      advertisingData.addServiceData(
-                          "0000ffff-0000-1000-8000-00805f9b34fb", [0x31, 0x32]);
-                      final advertising = KAdvertising(
-                          setting: advertisingSetting, data: advertisingData);
-                      await advertising.start();
-                      Navigator.pop(context);
-                    },
-                    child: Text("Advertise")),
+                  onPressed: () async {
+                    final advertisingSetting = KAdvertisingSetting(
+                      name: nameTextFieldController.text,
+                      connectable: connentable,
+                      timeout: timeoutTextFieldController.text.isEmpty
+                          ? 0
+                          : int.parse(timeoutTextFieldController.text),
+                    );
+                    final advertisingData = KAdvertisingData();
+                    services.forEach((uuid, data) {
+                      advertisingData.addServiceData(uuid, data);
+                    });
+                    final advertising = KAdvertising(
+                      setting: advertisingSetting,
+                      data: advertisingData,
+                    );
+                    await advertising.start();
+                    Navigator.pop(context);
+                  },
+                  child: Text("Advertise"),
+                ),
               ],
             )
           ],

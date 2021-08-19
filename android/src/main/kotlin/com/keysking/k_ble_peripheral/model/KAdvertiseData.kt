@@ -35,8 +35,12 @@ class KAdvertiseData() {
         val s = settingMap["serviceData"] as Map<*, *>
         s.forEach {
             val uuid = ParcelUuid.fromString(it.key as String)
-            val data = it.value as ArrayList<Byte>
-            serviceData[uuid] = data.toByteArray()
+            if (it.value == null) {
+                serviceData[uuid] = null
+            } else {
+                val data = it.value as ArrayList<Byte>
+                serviceData[uuid] = data.toByteArray()
+            }
         }
         val m = settingMap["manufacturerData"] as Map<*, *>
         m.forEach {
