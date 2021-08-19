@@ -30,7 +30,8 @@ class _NewAdvertiseDialogState extends State<NewAdvertiseDialog> {
     return Container(
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(
-            parent: const BouncingScrollPhysics()),
+          parent: const BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,6 +64,23 @@ class _NewAdvertiseDialogState extends State<NewAdvertiseDialog> {
                 ),
               ],
             ),
+            Column(
+              children: services.entries
+                  .map((e) => Card(
+                        color: Colors.grey,
+                        child: Container(
+                          child: Column(
+                            children: [
+                              Text(
+                                "uuid:\n${e.key}\ndata:${e.value?.map((i) => "0x" + i.toRadixString(16))}",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
             TextButton(
               onPressed: () {
                 showDialog(
@@ -70,7 +88,9 @@ class _NewAdvertiseDialogState extends State<NewAdvertiseDialog> {
                   builder: (context) => Dialog(
                     child: AddServiceDialog(
                       onAdd: (uuid, data) {
-                        services[uuid] = data;
+                        setState(() {
+                          services[uuid] = data;
+                        });
                       },
                     ),
                   ),
