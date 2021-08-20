@@ -3,21 +3,38 @@ package com.keysking.k_ble_peripheral
 import android.bluetooth.*
 import android.content.Context
 import android.util.Log
+import com.keysking.k_ble_peripheral.model.KGattCharacteristic
+import com.keysking.k_ble_peripheral.model.KGattService
+import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.*
-import java.lang.invoke.MethodHandle
 import java.util.*
+import android.R.attr.name
+import android.os.Handler
+import android.os.Looper
+import com.keysking.k_ble_peripheral.model.toMap
+
 
 class GattHandler(private val context: Context) : MethodCallHandler {
     private val manager: BluetoothManager =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    private val adapter: BluetoothAdapter = manager.adapter
 
-    private class KGattServerCallback : BluetoothGattServerCallback() {
-        lateinit var server: BluetoothGattServer
+    var connectionEventSink: EventSink? = null
+    private val uiThreadHandler: Handler = Handler(Looper.getMainLooper())
+
+    private val serverCallback = object : BluetoothGattServerCallback() {
         override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
             Log.d("KBlePeripheralPlugin", "onConnectionStateChange")
+            uiThreadHandler.post {
+                connectionEventSink?.success(
+                    mapOf(
+                        Pair("device",device?.toMap()),
+                        Pair("status", status),
+                        Pair("newState", newState)
+                    )
+                )
+            }
             super.onConnectionStateChange(device, status, newState)
         }
 
@@ -34,13 +51,13 @@ class GattHandler(private val context: Context) : MethodCallHandler {
         ) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
             Log.d("KBlePeripheralPlugin", "onCharacteristicReadRequest")
-            server.sendResponse(
+            gattServer.sendResponse(
                 device,
                 requestId,
                 BluetoothGatt.GATT_SUCCESS,
                 offset,
                 characteristic.value
-            );
+            )
         }
 
         override fun onCharacteristicWriteRequest(
@@ -120,26 +137,20 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             Log.d("KBlePeripheralPlugin", "onPhyRead")
         }
     }
+    private val gattServer: BluetoothGattServer = manager.openGattServer(context, serverCallback)
+    fun addService(service: KGattService, result: Result) {
+        val s = service.toService()
 
-    fun addGattService() {
-        val callback = KGattServerCallback()
-        val gattServer = manager.openGattServer(context, callback)
-        callback.server = gattServer
-        val service =
-            BluetoothGattService(UUID.randomUUID(), BluetoothGattService.SERVICE_TYPE_PRIMARY)
-        val characteristic = BluetoothGattCharacteristic(
-            UUID.randomUUID(),
-            BluetoothGattCharacteristic.PROPERTY_READ,
-            BluetoothGattCharacteristic.PERMISSION_READ
-        )
-        characteristic.value = mutableListOf<Byte>(0x22).toByteArray()
-        service.addCharacteristic(characteristic)
 
-        gattServer.addService(service)
+        gattServer.addService(s)
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
+            "addService" -> {
+                val service = KGattService(call.argument<Map<String, Any>>("Service")!!)
+                addService(service, result)
+            }
             else -> result.notImplemented()
         }
     }

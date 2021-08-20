@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:k_ble_peripheral/k_ble_peripheral.dart';
 import 'package:k_ble_peripheral_example/advertise_screen/advertise_screen.dart';
-import 'package:k_ble_peripheral_example/gatt_screen.dart';
+import 'package:k_ble_peripheral_example/gatt_screen/gatt_screen.dart';
 
 void main() {
   runApp(MyApp());

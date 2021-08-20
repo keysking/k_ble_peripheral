@@ -30,4 +30,12 @@ class KGattCharacteristic {
   addPermission(int permission) {
     permissions += permission;
   }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'uuid': uuid,
+      'properties': properties,
+      'permissions': permissions,
+    };
+  }
 }

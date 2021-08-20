@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 class KAdvertisingData {
   final Map<String, List<int>?> serviceData = Map();
   final Map<int, List<int>> manufacturerData = Map();

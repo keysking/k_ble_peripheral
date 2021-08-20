@@ -7,12 +7,15 @@ import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.EventChannel.*
 import io.flutter.plugin.common.MethodChannel
 
 /** KBlePeripheralPlugin */
 class KBlePeripheralPlugin : FlutterPlugin, ActivityAware {
     private lateinit var advertisingChannel: MethodChannel
     private lateinit var gattChannel: MethodChannel
+    private lateinit var gattConnectionEventChannel: EventChannel
     private lateinit var context: Context
     private lateinit var advertisingHandler: AdvertisingHandler
     private lateinit var gattHandler: GattHandler
@@ -21,6 +24,17 @@ class KBlePeripheralPlugin : FlutterPlugin, ActivityAware {
         advertisingChannel =
             MethodChannel(flutterPluginBinding.binaryMessenger, "m:kbp/advertising")
         gattChannel = MethodChannel(flutterPluginBinding.binaryMessenger, "m:kbp/gatt")
+        gattConnectionEventChannel =
+            EventChannel(flutterPluginBinding.binaryMessenger, "e:kbp/gatt/connection")
+        gattConnectionEventChannel.setStreamHandler(object : StreamHandler {
+            override fun onListen(arguments: Any?, events: EventSink) {
+                gattHandler.connectionEventSink = events
+            }
+
+            override fun onCancel(arguments: Any?) {
+                gattHandler.connectionEventSink = null
+            }
+        })
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {

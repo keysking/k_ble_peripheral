@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:k_ble_peripheral/k_ble_peripheral.dart';
 
 import 'new_advertise_dialog.dart';
@@ -22,7 +21,7 @@ class _AdvertiseScreenState extends State<AdvertiseScreen> {
       padding: const EdgeInsets.all(8),
       children: [
         Text("Advertising List:", style: TextStyle(fontSize: 20)),
-        ...advertises.map(
+        ...AdvertisingHandler.advertisings.map(
           (e) => Card(
             child: Container(
               child: Padding(
@@ -30,7 +29,10 @@ class _AdvertiseScreenState extends State<AdvertiseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(e, style: TextStyle(fontSize: 20)), // name
+                    Text(
+                      e.setting.name ?? "",
+                      style: TextStyle(fontSize: 20),
+                    ), // name
                   ],
                 ),
               ),
@@ -38,12 +40,14 @@ class _AdvertiseScreenState extends State<AdvertiseScreen> {
           ),
         ),
         ElevatedButton(
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => Dialog(
-                        child: NewAdvertiseDialog(),
-                      ));
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  child: NewAdvertiseDialog(),
+                ),
+              );
+              setState(() {});
             },
             child: Text("New Advertise"))
       ],

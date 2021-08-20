@@ -99,6 +99,7 @@ class _NewAdvertiseDialogState extends State<NewAdvertiseDialog> {
               child: Text("Add Service"),
             ),
             SizedBox(height: 30),
+            // TODO Add dManufacturer
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
