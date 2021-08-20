@@ -2,20 +2,19 @@ package com.keysking.k_ble_peripheral
 
 import android.bluetooth.*
 import android.content.Context
-import android.util.Log
-import com.keysking.k_ble_peripheral.model.KGattCharacteristic
-import com.keysking.k_ble_peripheral.model.KGattService
-import io.flutter.plugin.common.EventChannel
-import io.flutter.plugin.common.EventChannel.EventSink
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel.*
-import java.util.*
-import android.R.attr.name
 import android.os.Handler
 import android.os.Looper
-import com.keysking.k_ble_peripheral.model.toMap
+import android.util.Log
+import com.keysking.k_ble_peripheral.delegate.GattServiceDelegate
+import com.keysking.k_ble_peripheral.delegate.toMap
+import io.flutter.plugin.common.EventChannel.EventSink
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import io.flutter.plugin.common.MethodChannel.Result
 
-
+/**
+ * Gatt相关资源的持有者和Gatt宏观操作的操作者与分配者
+ */
 class GattHandler(private val context: Context) : MethodCallHandler {
     private val manager: BluetoothManager =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -24,12 +23,16 @@ class GattHandler(private val context: Context) : MethodCallHandler {
     private val uiThreadHandler: Handler = Handler(Looper.getMainLooper())
 
     private val serverCallback = object : BluetoothGattServerCallback() {
+        /**
+         * 连接状态发生变化
+         *  通过eventChannel通知flutter端
+         */
         override fun onConnectionStateChange(device: BluetoothDevice?, status: Int, newState: Int) {
             Log.d("KBlePeripheralPlugin", "onConnectionStateChange")
             uiThreadHandler.post {
                 connectionEventSink?.success(
                     mapOf(
-                        Pair("device",device?.toMap()),
+                        Pair("device", device?.toMap()),
                         Pair("status", status),
                         Pair("newState", newState)
                     )
@@ -38,11 +41,17 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             super.onConnectionStateChange(device, status, newState)
         }
 
+        /**
+         * 当添加了一个Service到Gatt
+         */
         override fun onServiceAdded(status: Int, service: BluetoothGattService?) {
             Log.d("KBlePeripheralPlugin", "onServiceAdded")
             super.onServiceAdded(status, service)
         }
 
+        /**
+         * 当某设备请求读取某个Characteristic的值
+         */
         override fun onCharacteristicReadRequest(
             device: BluetoothDevice?,
             requestId: Int,
@@ -60,6 +69,9 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             )
         }
 
+        /**
+         * 当某设备请求写某个Characteristic的值
+         */
         override fun onCharacteristicWriteRequest(
             device: BluetoothDevice?,
             requestId: Int,
@@ -81,6 +93,9 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             Log.d("KBlePeripheralPlugin", "onCharacteristicWriteRequest")
         }
 
+        /**
+         * 当某设备请求读某个Descriptor的值
+         */
         override fun onDescriptorReadRequest(
             device: BluetoothDevice?,
             requestId: Int,
@@ -91,6 +106,9 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             Log.d("KBlePeripheralPlugin", "onDescriptorReadRequest")
         }
 
+        /**
+         * 当某设备请求写某个Descriptor的值
+         */
         override fun onDescriptorWriteRequest(
             device: BluetoothDevice?,
             requestId: Int,
@@ -138,18 +156,18 @@ class GattHandler(private val context: Context) : MethodCallHandler {
         }
     }
     private val gattServer: BluetoothGattServer = manager.openGattServer(context, serverCallback)
-    fun addService(service: KGattService, result: Result) {
-        val s = service.toService()
-
-
-        gattServer.addService(s)
-    }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
+            // 添加service
             "addService" -> {
-                val service = KGattService(call.argument<Map<String, Any>>("Service")!!)
-                addService(service, result)
+                GattServiceDelegate.addService(
+                    gattServer,
+                    call.argument<Map<String, Any>>("Service")!!
+                )
+                result.success(null)
+            }
+            "removeService" -> {
             }
             else -> result.notImplemented()
         }
