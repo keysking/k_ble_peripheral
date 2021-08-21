@@ -1,6 +1,6 @@
 import 'dart:math';
 
-uuid() {
+randomId() {
   Random random = new Random(new DateTime.now().millisecond);
 
   final String hexDigits = "0123456789abcdef";

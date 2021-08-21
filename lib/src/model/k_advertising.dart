@@ -3,13 +3,16 @@ import 'package:k_ble_peripheral/src/util/uuid.dart';
 import '../../k_ble_peripheral.dart';
 
 class KAdvertising {
-  final String id = uuid();
+  final String id = randomId();
   KAdvertisingSetting setting;
   KAdvertisingData data = KAdvertisingData();
   KAdvertisingData scanResponseData = KAdvertisingData();
   bool isAdvertising = false;
 
-  KAdvertising({required this.setting, KAdvertisingData? data, KAdvertisingData? scanResponseData}) {
+  KAdvertising(
+      {required this.setting,
+      KAdvertisingData? data,
+      KAdvertisingData? scanResponseData}) {
     if (data != null) {
       this.data = data;
     }

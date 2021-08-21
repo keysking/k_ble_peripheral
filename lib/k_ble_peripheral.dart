@@ -1,9 +1,9 @@
 // src
 export 'package:k_ble_peripheral/src/k_ble_peripheral.dart';
+export 'package:k_ble_peripheral/src/k_gatt.dart';
 
 // src/handler
-export 'package:k_ble_peripheral/src/handler/k_advertising_handler.dart';
-export 'package:k_ble_peripheral/src/handler/k_gatt_handler.dart';
+export 'package:k_ble_peripheral/src/k_advertising.dart';
 
 // src/model
 export 'package:k_ble_peripheral/src/model/k_advertising.dart';
