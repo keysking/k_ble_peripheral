@@ -30,7 +30,7 @@ object CharacteristicDelegate {
 
 fun BluetoothGattCharacteristic.toMap(): MutableMap<String, Any?> {
     return mutableMapOf(
-        Pair("uuid", uuid),
+        Pair("uuid", uuid.toString()),
         Pair("properties", properties),
         Pair("permissions", permissions),
     )

@@ -31,33 +31,31 @@ class KGattCharacteristic {
   int permissions = 0;
   // late final Stream<String> onRead; // TODO not String
   KGattCharacteristic(this.uuid, {this.properties = 0, this.permissions = 0}) {
-    KGattHandler.method.invokeMethod("char/create", toMap()).then((value) {
-      print("char创建完成");
-    });
-    // onRead = KGattHandler.charReadEvent
-    //     .receiveBroadcastStream()
-    //     .where((event) => false)
-    //     .map((event) => "TODO,修改条件和信息");
+    KGattHandler.method.invokeMethod("char/create", toMap());
   }
 
   StreamSubscription listenRead(
-      void Function(KGattDevice device, String requestId, int offset) onRead) {
+      void Function(KGattDevice device, int requestId, int offset) onRead) {
     return KGattHandler()
         .eventStream
         .where((event) =>
             event['event'] == 'CharacteristicReadRequest' &&
             event["entityId"] == entityId)
         .listen((event) {
-      final device = KGattDevice.fromMap(event['device']);
+      print(event);
+      print(_entityId);
+      final device = KGattDevice.fromMap(Map.from(event['device']));
       onRead(device, event['requestId'], event['offset']);
     });
   }
 
+  ///添加property
   addProperty(int property) {
     properties += property;
     KGattHandler.method.invokeMethod("char/setProperties", properties);
   }
 
+  /// 添加permission
   addPermission(int permission) {
     permissions += permission;
     KGattHandler.method.invokeMethod("char/setPermissions", permissions);

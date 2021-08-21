@@ -79,13 +79,13 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                     )
                 )
             }
-//            gattServer.sendResponse(
-//                device,
-//                requestId,
-//                BluetoothGatt.GATT_SUCCESS,
-//                offset,
-//                characteristic.value
-//            )
+            gattServer.sendResponse(
+                device,
+                requestId,
+                BluetoothGatt.GATT_SUCCESS,
+                offset,
+                characteristic.value
+            )
         }
 
         /**

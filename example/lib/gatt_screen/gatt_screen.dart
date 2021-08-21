@@ -25,11 +25,28 @@ class GattScreen extends StatelessWidget {
               final characteristic = KGattCharacteristic(
                   "0000fff1-0000-1000-8000-00805f9b34fb",
                   properties: KGattCharacteristic.PROPERTY_READ +
-                      KGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE);
+                      KGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                  permissions: KGattCharacteristic.PERMISSION_READ +
+                      KGattCharacteristic.PERMISSION_WRITE);
+
+              characteristic.listenRead((device, requestId, offset) {
+                print("有设备想read:$device ,$requestId,$offset");
+              });
+              // 创建 characteristic
+              final characteristic2 = KGattCharacteristic(
+                  "0000fff1-0000-1000-8000-00805f9b34fa",
+                  properties: KGattCharacteristic.PROPERTY_READ +
+                      KGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+                  permissions: KGattCharacteristic.PERMISSION_READ +
+                      KGattCharacteristic.PERMISSION_WRITE);
+
+              characteristic2.listenRead((device, requestId, offset) {
+                print("有设备想read2:$device ,$requestId,$offset");
+              });
               // 创建service
               final service = KGattService(
                 "0000ffaf-0000-1000-8000-00805f9b34fb",
-                characteristics: [characteristic],
+                characteristics: [characteristic, characteristic2],
               );
               service.activate();
             },
