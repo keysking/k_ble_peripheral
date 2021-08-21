@@ -31,6 +31,8 @@ class GattScreen extends StatelessWidget {
 
               characteristic.listenRead((device, requestId, offset) {
                 print("有设备想read:$device ,$requestId,$offset");
+                characteristic.sendResponse(device.address, requestId, offset,
+                    [0x31, 0x30, 0x34, 0x3a]);
               });
               // 创建 characteristic
               final characteristic2 = KGattCharacteristic(
@@ -42,6 +44,12 @@ class GattScreen extends StatelessWidget {
 
               characteristic2.listenRead((device, requestId, offset) {
                 print("有设备想read2:$device ,$requestId,$offset");
+                characteristic2.sendResponse(
+                    device.address, requestId, offset, [0x31, 0x33]);
+              });
+              characteristic2.listenWrite(
+                  (device, requestId, offset, preparedWrite, responseNeeded) {
+                print("有设备想write2:$device ,$requestId,$offset");
               });
               // 创建service
               final service = KGattService(

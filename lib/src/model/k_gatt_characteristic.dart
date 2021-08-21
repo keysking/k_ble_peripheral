@@ -49,6 +49,34 @@ class KGattCharacteristic {
     });
   }
 
+  StreamSubscription listenWrite(
+      void Function(
+    KGattDevice device,
+    int requestId,
+    int offset,
+    bool preparedWrite,
+    bool responseNeeded,
+  )
+          onWrite) {
+    return KGattHandler()
+        .eventStream
+        .where((event) =>
+            event['event'] == 'CharacteristicWriteRequest' &&
+            event["entityId"] == entityId)
+        .listen((event) {
+      print(event);
+      print(_entityId);
+      final device = KGattDevice.fromMap(Map.from(event['device']));
+      onWrite(
+        device,
+        event['requestId'],
+        event['offset'],
+        event['preparedWrite'],
+        event['responseNeeded'],
+      );
+    });
+  }
+
   ///添加property
   addProperty(int property) {
     properties += property;
@@ -59,6 +87,18 @@ class KGattCharacteristic {
   addPermission(int permission) {
     permissions += permission;
     KGattHandler.method.invokeMethod("char/setPermissions", permissions);
+  }
+
+  /// 回复
+  sendResponse(
+      String deviceAddress, int requestId, int offset, List<int> value) async {
+    await KGattHandler.method
+        .invokeMapMethod("char/sendResponse", <String, dynamic>{
+      "deviceAddress": deviceAddress,
+      "requestId": requestId,
+      "offset": offset,
+      "value": value,
+    });
   }
 
   Map<String, dynamic> toMap() {

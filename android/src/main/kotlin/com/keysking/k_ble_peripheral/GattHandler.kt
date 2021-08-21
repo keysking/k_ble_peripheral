@@ -79,22 +79,15 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                     )
                 )
             }
-            gattServer.sendResponse(
-                device,
-                requestId,
-                BluetoothGatt.GATT_SUCCESS,
-                offset,
-                characteristic.value
-            )
         }
 
         /**
          * 当某设备请求写某个Characteristic的值
          */
         override fun onCharacteristicWriteRequest(
-            device: BluetoothDevice?,
+            device: BluetoothDevice,
             requestId: Int,
-            characteristic: BluetoothGattCharacteristic?,
+            characteristic: BluetoothGattCharacteristic,
             preparedWrite: Boolean,
             responseNeeded: Boolean,
             offset: Int,
@@ -110,6 +103,21 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                 value
             )
             Log.d("KBlePeripheralPlugin", "onCharacteristicWriteRequest")
+            uiThreadHandler.post {
+                eventSink?.success(
+                    mapOf(
+                        Pair("event", "CharacteristicWriteRequest"),
+                        Pair("entityId", CharacteristicDelegate.getEntityId(characteristic)),
+                        Pair("device", device.toMap()),
+                        Pair("requestId", requestId),
+                        Pair("characteristic", characteristic.toMap()),
+                        Pair("preparedWrite", preparedWrite),
+                        Pair("responseNeeded", responseNeeded),
+                        Pair("offset", offset),
+                        Pair("value", value),
+                    )
+                )
+            }
         }
 
         /**
@@ -186,6 +194,16 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             "char/create" -> {
                 CharacteristicDelegate.createCharacteristic(call.arguments())
                 result.success(null)
+            }
+            "char/sendResponse" -> {
+                val device = DeviceDelegate.getDevice(call.argument<String>("deviceAddress")!!)
+                gattServer.sendResponse(
+                    device,
+                    call.argument<Int>("requestId")!!,
+                    BluetoothGatt.GATT_SUCCESS,
+                    call.argument<Int>("offset")!!,
+                    call.argument<ArrayList<Byte>>("value")!!.toByteArray()
+                )
             }
             "service/create" -> {
                 GattServiceDelegate.createKService(call.arguments())
