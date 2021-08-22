@@ -6,10 +6,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.keysking.k_ble_peripheral.delegate.CharacteristicDelegate
-import com.keysking.k_ble_peripheral.delegate.DeviceDelegate
-import com.keysking.k_ble_peripheral.delegate.GattServiceDelegate
-import com.keysking.k_ble_peripheral.delegate.toMap
+import com.keysking.k_ble_peripheral.delegate.*
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -137,13 +134,13 @@ class GattHandler(private val context: Context) : MethodCallHandler {
          * 当某设备请求写某个Descriptor的值
          */
         override fun onDescriptorWriteRequest(
-            device: BluetoothDevice?,
+            device: BluetoothDevice,
             requestId: Int,
-            descriptor: BluetoothGattDescriptor?,
+            descriptor: BluetoothGattDescriptor,
             preparedWrite: Boolean,
             responseNeeded: Boolean,
             offset: Int,
-            value: ByteArray?
+            value: ByteArray
         ) {
             super.onDescriptorWriteRequest(
                 device,
@@ -155,8 +152,48 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                 value
             )
             Log.d("KBlePeripheralPlugin", "onDescriptorWriteRequest")
+            Log.d(
+                "KBlePeripheralPlugin", """
+                device: $device,
+                requestId: $requestId,
+                descriptor: ${descriptor.uuid},
+                preparedWrite: $preparedWrite,
+                responseNeeded: $responseNeeded,
+                offset: $offset,
+                value: ${value.toList()}
+            """.trimIndent()
+            )
+            // 当是notify时
+            if (descriptor.uuid.toString() == NotifyDescriptorUuid) {
+                Log.d("KBlePeripheralPlugin", "onDescriptorWriteRequest:sendResponse")
+                val characteristic = descriptor.characteristic
+                val entityId = CharacteristicDelegate.getEntityId(characteristic)
+                uiThreadHandler.post {
+                    eventSink?.success(
+                        mapOf(
+                            Pair("event", "NotificationStateChange"),
+                            Pair("entityId", entityId),
+                            Pair("device", device.toMap()),
+                            Pair(
+                                "enabled",
+                                value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                            )
+                        )
+                    )
+                }
+                gattServer.sendResponse(
+                    device,
+                    requestId,
+                    BluetoothGatt.GATT_SUCCESS,
+                    offset,
+                    value
+                )
+            }
         }
 
+        /**
+         * 当一个分包写入执行完成时
+         */
         override fun onExecuteWrite(device: BluetoothDevice?, requestId: Int, execute: Boolean) {
             super.onExecuteWrite(device, requestId, execute)
             Log.d("KBlePeripheralPlugin", "onExecuteWrite")
@@ -204,6 +241,14 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                     call.argument<Int>("offset")!!,
                     call.argument<ArrayList<Byte>>("value")!!.toByteArray()
                 )
+            }
+            "char/notify" -> {
+                val device = DeviceDelegate.getDevice(call.argument<String>("deviceAddress")!!)
+                val kChar = CharacteristicDelegate.getKChar(call.argument<String>("charId")!!)
+                val confirm = call.argument<Boolean>("confirm")!!
+                kChar.characteristic.value = call.argument<ArrayList<Byte>>("value")!!.toByteArray()
+                gattServer.notifyCharacteristicChanged(device, kChar.characteristic, confirm)
+                result.success(null)
             }
             "service/create" -> {
                 GattServiceDelegate.createKService(call.arguments())

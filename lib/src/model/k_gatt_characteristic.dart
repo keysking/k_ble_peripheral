@@ -34,6 +34,7 @@ class KGattCharacteristic {
     KGattHandler.method.invokeMethod("char/create", toMap());
   }
 
+  /// 监听读取characteristic值的请求
   StreamSubscription listenRead(
       void Function(KGattDevice device, int requestId, int offset) onRead) {
     return KGattHandler()
@@ -49,6 +50,7 @@ class KGattCharacteristic {
     });
   }
 
+  /// 监听写characteristic值的请求
   StreamSubscription listenWrite(
       void Function(
     KGattDevice device,
@@ -77,6 +79,20 @@ class KGattCharacteristic {
     });
   }
 
+  /// 监听主机设备订阅或取消订阅Notification
+  StreamSubscription listenNotificationState(
+      void Function(KGattDevice device, bool enabled) onStateChange) {
+    return KGattHandler()
+        .eventStream
+        .where((event) =>
+            event['event'] == 'NotificationStateChange' &&
+            event["entityId"] == entityId)
+        .listen((event) {
+      final device = KGattDevice.fromMap(Map.from(event['device']));
+      onStateChange(device, event['enabled']);
+    });
+  }
+
   ///添加property
   addProperty(int property) {
     properties += property;
@@ -101,6 +117,8 @@ class KGattCharacteristic {
     });
   }
 
+  /// 发送notify
+  void notify() {}
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'entityId': entityId,

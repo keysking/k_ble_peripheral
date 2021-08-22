@@ -41,7 +41,7 @@ object GattServiceDelegate {
         val service = BluetoothGattService(UUID.fromString(uuid), serviceType)
         val cList = map["characteristics"] as List<Map<String, Any>>
         cList.forEach {
-            service.addCharacteristic(createCharacteristic(it))
+            service.addCharacteristic(createCharacteristic(it).characteristic)
         }
         val kService = KGattService(entityId, service, false)
         services[entityId] = kService
