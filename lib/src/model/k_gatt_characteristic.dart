@@ -118,7 +118,16 @@ class KGattCharacteristic {
   }
 
   /// 发送notify
-  void notify() {}
+  void notify(String deviceAddress, List<int> value,
+      {bool confirm = false}) async {
+    await KGattHandler.method.invokeMapMethod("char/notify", <String, dynamic>{
+      "deviceAddress": deviceAddress,
+      "charEntityId": entityId,
+      "value": value,
+      "confirm": confirm,
+    });
+  }
+
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'entityId': entityId,

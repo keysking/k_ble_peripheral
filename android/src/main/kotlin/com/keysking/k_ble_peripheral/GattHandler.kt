@@ -241,10 +241,11 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                     call.argument<Int>("offset")!!,
                     call.argument<ArrayList<Byte>>("value")!!.toByteArray()
                 )
+                result.success(null)
             }
             "char/notify" -> {
                 val device = DeviceDelegate.getDevice(call.argument<String>("deviceAddress")!!)
-                val kChar = CharacteristicDelegate.getKChar(call.argument<String>("charId")!!)
+                val kChar = CharacteristicDelegate.getKChar(call.argument<String>("charEntityId")!!)
                 val confirm = call.argument<Boolean>("confirm")!!
                 kChar.characteristic.value = call.argument<ArrayList<Byte>>("value")!!.toByteArray()
                 gattServer.notifyCharacteristicChanged(device, kChar.characteristic, confirm)
