@@ -1,15 +1,15 @@
 # k_ble_peripheral
 
-A new Flutter project.
+A Flutter package for using ble in Peripheral mode(both Advertising and Gatt)
 
 ## Getting Started
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+Before I have time to write a tutorial, you can read example to learn how to use it.
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Attention
 
+Although I have applied it to my own project, the library is still in the development stage.
+
+## License
+
+Apache 2.0

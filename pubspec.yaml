@@ -2,6 +2,7 @@ name: k_ble_peripheral
 description: A new Flutter project.
 version: 0.0.1
 homepage:
+repository: https://github.com/keysking/k_ble_peripheral
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
