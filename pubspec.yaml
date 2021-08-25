@@ -1,5 +1,5 @@
 name: k_ble_peripheral
-description: A new Flutter project.
+description: A Flutter package for using ble in Peripheral mode(both Advertising and Gatt)
 version: 0.0.1
 homepage:
 repository: https://github.com/keysking/k_ble_peripheral
