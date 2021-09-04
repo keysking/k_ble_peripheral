@@ -35,13 +35,10 @@ class KGattCharacteristic {
   }
 
   /// 监听读取characteristic值的请求
-  StreamSubscription listenRead(
-      void Function(KGattDevice device, int requestId, int offset) onRead) {
+  StreamSubscription listenRead(void Function(KGattDevice device, int requestId, int offset) onRead) {
     return KGattHandler()
         .eventStream
-        .where((event) =>
-            event['event'] == 'CharacteristicReadRequest' &&
-            event["entityId"] == entityId)
+        .where((event) => event['event'] == 'CharacteristicReadRequest' && event["entityId"] == entityId)
         .listen((event) {
       print(event);
       print(_entityId);
@@ -58,13 +55,12 @@ class KGattCharacteristic {
     int offset,
     bool preparedWrite,
     bool responseNeeded,
+    List value,
   )
           onWrite) {
     return KGattHandler()
         .eventStream
-        .where((event) =>
-            event['event'] == 'CharacteristicWriteRequest' &&
-            event["entityId"] == entityId)
+        .where((event) => event['event'] == 'CharacteristicWriteRequest' && event["entityId"] == entityId)
         .listen((event) {
       print(event);
       print(_entityId);
@@ -75,18 +71,16 @@ class KGattCharacteristic {
         event['offset'],
         event['preparedWrite'],
         event['responseNeeded'],
+        event['value'],
       );
     });
   }
 
   /// 监听主机设备订阅或取消订阅Notification
-  StreamSubscription listenNotificationState(
-      void Function(KGattDevice device, bool enabled) onStateChange) {
+  StreamSubscription listenNotificationState(void Function(KGattDevice device, bool enabled) onStateChange) {
     return KGattHandler()
         .eventStream
-        .where((event) =>
-            event['event'] == 'NotificationStateChange' &&
-            event["entityId"] == entityId)
+        .where((event) => event['event'] == 'NotificationStateChange' && event["entityId"] == entityId)
         .listen((event) {
       final device = KGattDevice.fromMap(Map.from(event['device']));
       onStateChange(device, event['enabled']);
@@ -106,10 +100,8 @@ class KGattCharacteristic {
   }
 
   /// 回复
-  sendResponse(
-      String deviceAddress, int requestId, int offset, List<int> value) async {
-    await KGattHandler.method
-        .invokeMapMethod("char/sendResponse", <String, dynamic>{
+  sendResponse(String deviceAddress, int requestId, int offset, List<int> value) async {
+    await KGattHandler.method.invokeMapMethod("char/sendResponse", <String, dynamic>{
       "deviceAddress": deviceAddress,
       "requestId": requestId,
       "offset": offset,
@@ -118,8 +110,7 @@ class KGattCharacteristic {
   }
 
   /// 发送notify
-  void notify(String deviceAddress, List<int> value,
-      {bool confirm = false}) async {
+  void notify(String deviceAddress, List<int> value, {bool confirm = false}) async {
     await KGattHandler.method.invokeMapMethod("char/notify", <String, dynamic>{
       "deviceAddress": deviceAddress,
       "charEntityId": entityId,
