@@ -24,19 +24,12 @@ object CharacteristicDelegate {
         return characteristics[entityId] ?: throw NotFoundCharacteristic
     }
 
-    fun createCharacteristic(map: Map<String, Any>): KGattCharacteristic {
-        val uuid = map["uuid"] as String
-        val properties = map["properties"] as Int
-        val permissions = map["permissions"] as Int
-        val entityId = map["entityId"] as String
-        val characteristic =
-            BluetoothGattCharacteristic(UUID.fromString(uuid), properties, permissions)
-        // 若需要Notify,则自动添加对应的Descriptor
+    fun createCharacteristic(uuid: String, properties: Int, permissions: Int, entityId: String): KGattCharacteristic {
+        val characteristic = BluetoothGattCharacteristic(UUID.fromString(uuid), properties, permissions)
         // If Notify is required, the corresponding Descriptor is automatically added
         if ((properties and BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0) {
             val descriptor = BluetoothGattDescriptor(
-                UUID.fromString(NotifyDescriptorUuid),
-                BluetoothGattDescriptor.PERMISSION_WRITE or BluetoothGattDescriptor.PERMISSION_READ
+                UUID.fromString(NotifyDescriptorUuid), BluetoothGattDescriptor.PERMISSION_WRITE or BluetoothGattDescriptor.PERMISSION_READ
             )
             descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
             characteristic.addDescriptor(descriptor)
@@ -55,5 +48,4 @@ fun BluetoothGattCharacteristic.toMap(): MutableMap<String, Any?> {
     )
 }
 
-object NotFoundCharacteristic :
-    RuntimeException("Not Found Gatt Characteristic,may be the entityId is wrong.")
+object NotFoundCharacteristic : RuntimeException("Not Found Gatt Characteristic,may be the entityId is wrong.")

@@ -2,23 +2,17 @@ package com.keysking.k_ble_peripheral
 
 import android.bluetooth.*
 import android.bluetooth.le.AdvertiseCallback
-import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.util.Log
-import android.view.KeyCharacterMap
-import androidx.annotation.NonNull
 import com.keysking.k_ble_peripheral.model.KAdvertiseData
 import com.keysking.k_ble_peripheral.model.KAdvertiseSetting
 import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.*
-import java.util.*
 
-class AdvertisingHandler(private val context: Context) : MethodCallHandler {
-    private val manager: BluetoothManager =
-        context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+class AdvertisingHandler(context: Context) : MethodCallHandler {
+    private val manager: BluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val adapter: BluetoothAdapter = manager.adapter
     private val advertiser: BluetoothLeAdvertiser = adapter.bluetoothLeAdvertiser
 
@@ -28,7 +22,7 @@ class AdvertisingHandler(private val context: Context) : MethodCallHandler {
     private class KAdvertiseCallback(val result: Result, val uuid: String) : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
             super.onStartSuccess(settingsInEffect)
-            result.success(uuid.toString())
+            result.success(uuid)
         }
 
         override fun onStartFailure(errorCode: Int) {
@@ -39,11 +33,7 @@ class AdvertisingHandler(private val context: Context) : MethodCallHandler {
 
     private val advertiseCallbackMap = mutableMapOf<String, KAdvertiseCallback>()
     private fun startAdvertising(
-        id: String,
-        advertiseSettings: KAdvertiseSetting,
-        advertiseData: KAdvertiseData,
-        scanResponseData: KAdvertiseData,
-        result: Result
+        id: String, advertiseSettings: KAdvertiseSetting, advertiseData: KAdvertiseData, scanResponseData: KAdvertiseData, result: Result
     ) {
         // TODO auto open bluetooth when it closed
 
@@ -81,17 +71,14 @@ class AdvertisingHandler(private val context: Context) : MethodCallHandler {
         }
     }
 
-    override fun onMethodCall(@NonNull call: MethodCall,@NonNull result: Result) {
+    override fun onMethodCall(call: MethodCall, result: Result) {
         Log.d("KBlePeripheralPlugin", "onMethodCall->${call.method}")
         when (call.method) {
             "startAdvertising" -> {
                 val id = call.argument<String>("Id")!!
-                val kAdvertiseSetting =
-                    KAdvertiseSetting(call.argument<Map<String, Any>>("AdvertiseSetting")!!)
-                val kAdvertiseData =
-                    KAdvertiseData(call.argument<Map<String, Any>>("AdvertiseData")!!)
-                val scanResponseData =
-                    KAdvertiseData(call.argument<Map<String, Any>>("ScanResponseData")!!)
+                val kAdvertiseSetting = KAdvertiseSetting(call.argument<Map<String, Any>>("AdvertiseSetting")!!)
+                val kAdvertiseData = KAdvertiseData(call.argument<Map<String, Any>>("AdvertiseData")!!)
+                val scanResponseData = KAdvertiseData(call.argument<Map<String, Any>>("ScanResponseData")!!)
 
                 startAdvertising(id, kAdvertiseSetting, kAdvertiseData, scanResponseData, result)
             }

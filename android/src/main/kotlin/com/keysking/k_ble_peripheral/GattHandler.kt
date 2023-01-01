@@ -11,57 +11,39 @@ import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-
 /**
- * Gatt相关资源的持有者和Gatt宏观操作的操作者与分配者
+ * GattHandler is the holder and distributor of Gatt resources
  */
-class GattHandler(private val context: Context) : MethodCallHandler {
-    private val manager: BluetoothManager =
-        context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+class GattHandler(context: Context) : MethodCallHandler {
+    private val manager: BluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 
     var eventSink: EventSink? = null
     private val uiThreadHandler: Handler = Handler(Looper.getMainLooper())
 
     private val serverCallback = object : BluetoothGattServerCallback() {
-        /**
-         * 连接状态发生变化
-         *  通过eventChannel通知flutter端
-         */
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             Log.d("KBlePeripheralPlugin", "onConnectionStateChange")
             if (newState == STATE_CONNECTED) {
                 DeviceDelegate.newDevice(device)
             }
+            // send event to flutter
             uiThreadHandler.post {
                 eventSink?.success(
                     mapOf(
-                        Pair("event", "ConnectionStateChange"),
-                        Pair("device", device.toMap()),
-                        Pair("status", status),
-                        Pair("newState", newState)
+                        Pair("event", "ConnectionStateChange"), Pair("device", device.toMap()), Pair("status", status), Pair("newState", newState)
                     )
                 )
             }
             super.onConnectionStateChange(device, status, newState)
         }
 
-        /**
-         * 当添加了一个Service到Gatt
-         */
         override fun onServiceAdded(status: Int, service: BluetoothGattService?) {
             Log.d("KBlePeripheralPlugin", "onServiceAdded")
             super.onServiceAdded(status, service)
         }
 
-        /**
-         * 当某设备请求读取某个Characteristic的值
-         */
-        override fun onCharacteristicReadRequest(
-            device: BluetoothDevice,
-            requestId: Int,
-            offset: Int,
-            characteristic: BluetoothGattCharacteristic
-        ) {
+
+        override fun onCharacteristicReadRequest(device: BluetoothDevice, requestId: Int, offset: Int, characteristic: BluetoothGattCharacteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
             Log.d("KBlePeripheralPlugin", "onCharacteristicReadRequest")
             uiThreadHandler.post {
@@ -78,27 +60,8 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             }
         }
 
-        /**
-         * 当某设备请求写某个Characteristic的值
-         */
-        override fun onCharacteristicWriteRequest(
-            device: BluetoothDevice,
-            requestId: Int,
-            characteristic: BluetoothGattCharacteristic,
-            preparedWrite: Boolean,
-            responseNeeded: Boolean,
-            offset: Int,
-            value: ByteArray?
-        ) {
-            super.onCharacteristicWriteRequest(
-                device,
-                requestId,
-                characteristic,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
+        override fun onCharacteristicWriteRequest(device: BluetoothDevice, requestId: Int, characteristic: BluetoothGattCharacteristic, preparedWrite: Boolean, responseNeeded: Boolean, offset: Int, value: ByteArray?) {
+            super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value)
             Log.d("KBlePeripheralPlugin", "onCharacteristicWriteRequest")
             uiThreadHandler.post {
                 eventSink?.success(
@@ -117,15 +80,7 @@ class GattHandler(private val context: Context) : MethodCallHandler {
             }
         }
 
-        /**
-         * 当某设备请求读某个Descriptor的值
-         */
-        override fun onDescriptorReadRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            offset: Int,
-            descriptor: BluetoothGattDescriptor?
-        ) {
+        override fun onDescriptorReadRequest(device: BluetoothDevice?, requestId: Int, offset: Int, descriptor: BluetoothGattDescriptor?) {
             super.onDescriptorReadRequest(device, requestId, offset, descriptor)
             Log.d("KBlePeripheralPlugin", "onDescriptorReadRequest")
         }
@@ -133,24 +88,8 @@ class GattHandler(private val context: Context) : MethodCallHandler {
         /**
          * 当某设备请求写某个Descriptor的值
          */
-        override fun onDescriptorWriteRequest(
-            device: BluetoothDevice,
-            requestId: Int,
-            descriptor: BluetoothGattDescriptor,
-            preparedWrite: Boolean,
-            responseNeeded: Boolean,
-            offset: Int,
-            value: ByteArray
-        ) {
-            super.onDescriptorWriteRequest(
-                device,
-                requestId,
-                descriptor,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
+        override fun onDescriptorWriteRequest(device: BluetoothDevice, requestId: Int, descriptor: BluetoothGattDescriptor, preparedWrite: Boolean, responseNeeded: Boolean, offset: Int, value: ByteArray) {
+            super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value)
             Log.d("KBlePeripheralPlugin", "onDescriptorWriteRequest")
             Log.d(
                 "KBlePeripheralPlugin", """
@@ -163,7 +102,7 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                 value: ${value.toList()}
             """.trimIndent()
             )
-            // 当是notify时
+            // id NotifyDescriptorUuid
             if (descriptor.uuid.toString() == NotifyDescriptorUuid) {
                 Log.d("KBlePeripheralPlugin", "onDescriptorWriteRequest:sendResponse")
                 val characteristic = descriptor.characteristic
@@ -171,22 +110,14 @@ class GattHandler(private val context: Context) : MethodCallHandler {
                 uiThreadHandler.post {
                     eventSink?.success(
                         mapOf(
-                            Pair("event", "NotificationStateChange"),
-                            Pair("entityId", entityId),
-                            Pair("device", device.toMap()),
-                            Pair(
-                                "enabled",
-                                value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                            Pair("event", "NotificationStateChange"), Pair("entityId", entityId), Pair("device", device.toMap()), Pair(
+                                "enabled", value.contentEquals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
                             )
                         )
                     )
                 }
                 gattServer.sendResponse(
-                    device,
-                    requestId,
-                    BluetoothGatt.GATT_SUCCESS,
-                    offset,
-                    value
+                    device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value
                 )
             }
         }
@@ -227,40 +158,64 @@ class GattHandler(private val context: Context) : MethodCallHandler {
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
-            // 新建Characteristic
+            // create new Characteristic
             "char/create" -> {
-                CharacteristicDelegate.createCharacteristic(call.arguments())
+                val arguments = call.arguments as Map<*, *>
+                val uuid = arguments["uuid"] as String
+                val properties = arguments["properties"] as Int
+                val permissions = arguments["permissions"] as Int
+                val entityId = arguments["entityId"] as String
+
+                CharacteristicDelegate.createCharacteristic(uuid, properties, permissions, entityId)
                 result.success(null)
             }
             "char/sendResponse" -> {
-                val device = DeviceDelegate.getDevice(call.argument<String>("deviceAddress")!!)
-                gattServer.sendResponse(
-                    device,
-                    call.argument<Int>("requestId")!!,
-                    BluetoothGatt.GATT_SUCCESS,
-                    call.argument<Int>("offset")!!,
-                    call.argument<ArrayList<Byte>>("value")!!.toByteArray()
-                )
+                val arguments = call.arguments as Map<*, *>
+                val address = arguments["deviceAddress"] as String
+                val requestId = arguments["requestId"] as Int
+                val offset = arguments["offset"] as Int
+                val value = (arguments["value"] as ArrayList<Byte>).toByteArray()
+
+                val device = DeviceDelegate.getDevice(address)
+                gattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value)
                 result.success(null)
             }
             "char/notify" -> {
-                val device = DeviceDelegate.getDevice(call.argument<String>("deviceAddress")!!)
-                val kChar = CharacteristicDelegate.getKChar(call.argument<String>("charEntityId")!!)
-                val confirm = call.argument<Boolean>("confirm")!!
-                kChar.characteristic.value = call.argument<ArrayList<Byte>>("value")!!.toByteArray()
+                val arguments = call.arguments as Map<*, *>
+                val address = arguments["deviceAddress"] as String
+                val entityId = arguments["charEntityId"] as String
+                val confirm = arguments["confirm"] as Boolean
+                val value = (arguments["value"] as ArrayList<Byte>).toByteArray()
+
+                val device = DeviceDelegate.getDevice(address)
+                val kChar = CharacteristicDelegate.getKChar(entityId)
+                kChar.characteristic.value = value
                 gattServer.notifyCharacteristicChanged(device, kChar.characteristic, confirm)
                 result.success(null)
             }
             "service/create" -> {
-                GattServiceDelegate.createKService(call.arguments())
+                val arguments = call.arguments as Map<*, *>
+                val entityId = arguments["entityId"] as String
+                val uuid = arguments["uuid"] as String
+                val type = arguments["type"] as Int
+                val characteristics = (arguments["characteristics"] as List<Map<String, Any>>).map {
+                    val charUuid = it["uuid"] as String
+                    val charProperties = it["properties"] as Int
+                    val charPermissions = it["permissions"] as Int
+                    val charEntityId = it["entityId"] as String
+                    CharacteristicDelegate.createCharacteristic(charUuid, charProperties, charPermissions, charEntityId)
+                }
+
+                GattServiceDelegate.createKService(entityId, uuid, type, characteristics)
+//                GattServiceDelegate.createKService(call.arguments as Map<String, Any>)
                 result.success(null)
             }
             "service/activate" -> {
-                GattServiceDelegate.activate(call.arguments())
+                GattServiceDelegate.activate(call.arguments as String)
                 result.success(null)
             }
             "service/inactivate" -> {
-                GattServiceDelegate.inactivate(call.arguments())
+                GattServiceDelegate.inactivate(call.arguments as String)
                 result.success(null)
             }
             else -> result.notImplemented()
