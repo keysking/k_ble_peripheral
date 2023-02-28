@@ -46,7 +46,8 @@ class AdvertisingHandler(context: Context) : MethodCallHandler {
         // 扫描回包数据
         val scanResponse = scanResponseData.toAdvertiseData()
 
-        adapter.name = advertiseSettings.name
+        if(advertiseSettings.name != null)
+            adapter.name = advertiseSettings.name
 
         val callback = KAdvertiseCallback(result, id)
         advertiseCallbackMap[id] = callback
